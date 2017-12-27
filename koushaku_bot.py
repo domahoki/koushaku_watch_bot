@@ -19,7 +19,7 @@ GOBI    = "だねぇ～。"
 HELP_MSG = "USAGE:\n" \
            "--------------------------------\n" \
            "ランク監視: -l, --lol\n" \
-           "配信視聴者監視(未実装): -t, --twitch\n" \
+           "配信視聴者監視: -t, --twitch\n" \
            "ダイスロール: -r, --roll ?d?\n" \
            "ヘルプ: -h, --help\n" \
            "APIキー更新: --set_api_key %API_KEY\n" \
@@ -104,6 +104,7 @@ def dice_roll(message):
             result += str(random.randint(1, dice_type))
             if i < (dice_num - 1):
                 result += ", "
+        result = "{} {}".format(message.author.mention, result)
         return result
     except BaseException as _:
         return "うまく転がせないよぉ～"
@@ -130,6 +131,9 @@ async def on_message(message):
         await client.send_message(message.channel, HELP_MSG)
     elif mode == Mode.DICE:
         response = dice_roll(message)
+        await client.send_message(message.channel, response)
+    elif mode == Mode.TWITCH:
+        response = show_twitch_view_num()
         await client.send_message(message.channel, response)
 
 client.run(TOKEN)
