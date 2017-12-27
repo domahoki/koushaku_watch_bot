@@ -9,6 +9,7 @@ from enum import Enum
 import random
 import yaml
 import sys
+from twitch import TwitchClient
 
 
 TWITCH_ID = "64445397"
