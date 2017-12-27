@@ -11,6 +11,7 @@ import yaml
 import sys
 
 
+TWITCH_ID = "64445397"
 SUMM_ID = "6184085"
 SUMM_NM = "こうしゃく"
 REGION  = "jp1"
@@ -27,9 +28,9 @@ HELP_MSG = "USAGE:\n" \
 try:
     yaml_f = open("setting.yaml", "r+")
     yaml_data = yaml.load(yaml_f)
-    RIOT_API_KEY = yaml_data("riot_api_key")
-    TWITCH_CLIENT_ID = yaml_data("twitch_client_id")
-    TOKEN   = yaml_data("discord_token")
+    RIOT_API_KEY = yaml_data["riot_api_key"]
+    TWITCH_CLIENT_ID = yaml_data["twitch_client_id"]
+    TOKEN   = yaml_data["discord_token"]
 except BaseException as err:
     print("Failed to import setting.yaml")
     sys.exit()
@@ -88,12 +89,16 @@ def set_api_key(message):
 
 def show_twitch_view_num():
     twitch_client = TwitchClient(client_id=TWITCH_CLIENT_ID)
+    response = twitch_client.streams.get_stream_by_user("64445397")
+    if response is None:
+        return "こうしゃくさんは配信してないみたいだねぇ～"
+    return "こうしゃくさんの配信は{}人が観てるよぉ～".format(response["viewers"])
 
 def dice_roll(message):
     try:
         dice = message.content.split(" ")[2].split("d")
-        dice_type = int(dice[0])
-        dice_num = int(dice[1])
+        dice_num = int(dice[0])
+        dice_type = int(dice[1])
         result = ""
         for i in range(dice_num):
             result += str(random.randint(1, dice_type))
@@ -106,21 +111,25 @@ def dice_roll(message):
 @client.event
 async def on_ready():
     global watcher
-    watcher = RiotWatcher(RIOT_API_KEY)
+    try:
+        watcher = RiotWatcher(RIOT_API_KEY)
+        return "APIキーを更新したよぉ～"
+    except BaseException as _:
+        return "APIキーの更新に失敗したよぉ～"
 
 @client.event
 async def on_message(message):
     mode = find_koushaku_message(message)
     if mode == Mode.LOL:
-        lol_msg = show_lol_stats()
-        await client.send_message(message.channel, lol_msg)
+        response = show_lol_stats()
+        await client.send_message(message.channel, response)
     elif mode == Mode.API:
-        set_api_key(message)
-        await client.send_message(message.channel, "APIキーを更新したよぉ～")
+        response = set_api_key(message)
+        await client.send_message(message.channel, response)
     elif mode == Mode.HELP:
         await client.send_message(message.channel, HELP_MSG)
     elif mode == Mode.DICE:
-        dice_msg = dice_roll(message)
-        await client.send_message(message.channel, dice_msg)
+        response = dice_roll(message)
+        await client.send_message(message.channel, response)
 
 client.run(TOKEN)
